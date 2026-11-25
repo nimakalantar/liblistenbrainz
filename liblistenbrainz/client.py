@@ -536,7 +536,8 @@ class ListenBrainz:
         :param release_name: the release the track is on, if known
         :type release_name: str, optional
 
-        :return: the mapping, holding recording_mbid when a match was found
+        :return: the mapping, holding recording_mbid when a match was found and
+            empty otherwise
         :rtype: dict
         """
         self._require_auth_token()

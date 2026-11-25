@@ -358,3 +358,19 @@ class ListenBrainzClientTestCase(unittest.TestCase):
     def test_lookup_recording_needs_a_token(self):
         with self.assertRaises(errors.AuthTokenRequiredException):
             self.client.lookup_recording('Paradise Lost', 'Say Just Words')
+
+    @requests_mock.Mocker()
+    def test_lookup_recording_calls_the_metadata_lookup_endpoint(self, m):
+        m.get('https://api.listenbrainz.org/1/validate-token', json={'valid': True})
+        test_response = {'recording_mbid': '8f3471b5-7e6a-48da-86a9-c1c07a0f47ae'}
+        m.get('https://api.listenbrainz.org/1/metadata/lookup/', json=test_response)
+
+        auth_token = str(uuid.uuid4())
+        self.client.set_auth_token(auth_token)
+
+        result = self.client.lookup_recording('Paradise Lost', 'Say Just Words')
+
+        # the endpoint responds with a 308 redirect if the trailing slash is missing
+        self.assertEqual(m.last_request.path, '/1/metadata/lookup/')
+        self.assertEqual(m.last_request.headers['Authorization'], f'Token {auth_token}')
+        self.assertEqual(result, test_response)

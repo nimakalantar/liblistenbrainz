@@ -325,3 +325,36 @@ class ListenBrainzClientTestCase(unittest.TestCase):
         self.client._get.assert_called_once_with('/1/user/iliekcomputers/listen-count')
 
         self.assertEqual(returned_count, test_response['payload']['count'])
+
+    def test_lookup_recording(self):
+        self.client._get = mock.MagicMock()
+        self.client._auth_token = 'token'
+        test_response = {'recording_mbid': '8f3471b5-7e6a-48da-86a9-c1c07a0f47ae'}
+        self.client._get.return_value = test_response
+
+        result = self.client.lookup_recording('Paradise Lost', 'Say Just Words')
+
+        self.client._get.assert_called_once_with(
+            '/1/metadata/lookup/',
+            params={'artist_name': 'Paradise Lost', 'recording_name': 'Say Just Words'},
+        )
+        self.assertEqual(result, test_response)
+
+    def test_lookup_recording_with_release(self):
+        self.client._get = mock.MagicMock()
+        self.client._auth_token = 'token'
+
+        self.client.lookup_recording('Paradise Lost', 'Say Just Words', release_name='One Second')
+
+        self.client._get.assert_called_once_with(
+            '/1/metadata/lookup/',
+            params={
+                'artist_name': 'Paradise Lost',
+                'recording_name': 'Say Just Words',
+                'release_name': 'One Second',
+            },
+        )
+
+    def test_lookup_recording_needs_a_token(self):
+        with self.assertRaises(errors.AuthTokenRequiredException):
+            self.client.lookup_recording('Paradise Lost', 'Say Just Words')

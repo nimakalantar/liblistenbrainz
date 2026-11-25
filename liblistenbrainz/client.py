@@ -518,3 +518,32 @@ class ListenBrainz:
                 return None
             else:
                 raise
+
+    def lookup_recording(self, artist_name, recording_name, release_name=None):
+        """ Look up the MusicBrainz recording id for an artist and track name.
+
+        The MBID mapper matches the messy names a music service sends -- a release
+        title carrying "- 2008 remaster", say -- to the recording MusicBrainz holds,
+        so a song can be identified from its names alone, before its audio exists.
+        Requires that the auth token for the user has been set.
+
+        :param artist_name: the artist name of the track
+        :type artist_name: str
+
+        :param recording_name: the track name
+        :type recording_name: str
+
+        :param release_name: the release the track is on, if known
+        :type release_name: str, optional
+
+        :return: the mapping, holding recording_mbid when a match was found
+        :rtype: dict
+        """
+        self._require_auth_token()
+        params = {
+            'artist_name': artist_name,
+            'recording_name': recording_name,
+        }
+        if release_name:
+            params['release_name'] = release_name
+        return self._get('/1/metadata/lookup/', params=params)
